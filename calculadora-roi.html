@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales ROI Calculator</title>
+<style>
+  :root {
+    --bg: #080c0a;
+    --card: #0f1612;
+    --card-inner: #151e19;
+    --border: #1e2e25;
+    --primary: #1a7a42;
+    --primary-bright: #22a058;
+    --primary-glow: rgba(26,122,66,0.2);
+    --accent: #2ecc71;
+    --accent-dim: #27ae60;
+    --red: #e74c3c;
+    --orange: #f39c12;
+    --text: #ecf0ed;
+    --text-dim: #8fa898;
+    --text-muted: #5a7563;
+    --slider-track: #1e2e25;
+    --slider-fill: #1a7a42;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* Top Nav Bar */
+  .top-bar {
+    background: #0a0e0b;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  .top-bar .brand {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: 0.5px;
+  }
+  .top-bar .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .btn-settings {
+    position: absolute;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    transition: all 0.2s;
+  }
+  .btn-settings:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text-dim);
+  }
+
+  /* Sidebar Facturacion Hero (gradient top of first sidebar card) */
+  .facturacion-hero {
+    background: linear-gradient(135deg, #0a3d1e 0%, #145a32 40%, #1a7a42 100%);
+    border-radius: 12px 12px 0 0;
+    padding: 20px 20px 16px;
+  }
+  .facturacion-hero .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 2px;
+  }
+  .facturacion-hero .value {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 24px 48px;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static !important; }
+  }
+  .main-col { display: flex; flex-direction: column; gap: 14px; }
+  .sidebar {
+    position: sticky;
+    top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Section Headers */
+  .section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    margin-top: 6px;
+  }
+
+  /* Slider Cards */
+  .slider-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+  .slider-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .slider-top .label { font-size: 14px; font-weight: 600; }
+  .slider-top .right-info { display: flex; align-items: baseline; gap: 8px; }
+  .slider-top .result { font-size: 12px; color: var(--text-muted); }
+  .slider-top .val { font-size: 16px; font-weight: 800; }
+  .slider-top .suffix { font-size: 12px; color: var(--text-muted); margin-left: 2px; }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    margin: 4px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(46,204,113,0.4);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 3px solid #fff;
+    cursor: pointer;
+  }
+
+  .slider-bottom {
+    display: flex;
+    justify-content: flex-end;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ROAS Cards */
+  .roas-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .roas-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+  }
+  .roas-card .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .roas-card .value {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* Sidebar Cards */
+  .sidebar-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .sidebar-card-body {
+    padding: 16px 20px;
+  }
+  .sidebar-card h3 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .sidebar-card--plain {
+    padding: 20px;
+  }
+  .sidebar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .sidebar-row .label { font-size: 12px; color: var(--text-dim); }
+  .sidebar-row .value { font-size: 14px; font-weight: 700; }
+  .sidebar-row .value.big { font-size: 24px; font-weight: 900; }
+  .cash-section-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .cash-section-value {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  .sidebar-divider { border-top: 1px solid var(--border); margin: 6px 0; }
+
+  /* Embudo */
+  .embudo-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .embudo-row .label {
+    width: 90px;
+    font-size: 12px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .embudo-row .bar-wrap {
+    flex: 1;
+    height: 10px;
+    background: var(--slider-track);
+    border-radius: 5px;
+    margin: 0 12px;
+    overflow: hidden;
+  }
+  .embudo-row .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s;
+  }
+  .embudo-row .count {
+    width: 30px;
+    text-align: right;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  /* Program Mix */
+  .mix-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .mix-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .mix-header h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .btn-add-program {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .btn-add-program:hover { text-decoration: underline; }
+  .units-check {
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .program-item {
+    background: var(--card-inner);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 8px;
+  }
+  .program-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+  }
+  .program-fields { display: flex; gap: 12px; align-items: center; }
+  .program-field { display: flex; align-items: center; gap: 4px; }
+  .program-field .lbl { font-size: 11px; color: var(--text-muted); }
+  .program-field .prefix { font-size: 11px; color: var(--text-muted); }
+  .program-field input {
+    width: 70px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+    outline: none;
+  }
+  .program-field input:focus { border-color: var(--accent); }
+  .program-mix-pct { font-size: 11px; color: var(--text-muted); margin-left: auto; }
+  .btn-remove-program {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 18px; margin-left: 8px;
+  }
+  .btn-remove-program:hover { color: var(--red); }
+  .aov-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .aov-row .label { font-size: 13px; color: var(--text-dim); }
+  .aov-row .value { font-size: 20px; font-weight: 900; color: var(--accent); }
+
+  /* Expense items */
+  .expense-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .expense-item input[type="text"] {
+    flex: 1;
+    background: var(--card-inner);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+  }
+  .expense-item input[type="text"]:focus { border-color: var(--accent); }
+  .expense-item input[type="number"] {
+    width: 90px;
+    background: var(--card-inner);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+    outline: none;
+  }
+  .expense-item input[type="number"]:focus { border-color: var(--accent); }
+  .expense-item .prefix { font-size: 12px; color: var(--text-muted); }
+  .expense-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    margin-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .expense-total-row .label { font-size: 13px; color: var(--text-dim); }
+  .expense-total-row .value { font-size: 20px; font-weight: 900; color: var(--red); }
+
+  /* Profit card */
+  .profit-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .profit-hero {
+    padding: 16px 20px;
+    text-align: center;
+  }
+  .profit-hero .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+  .profit-hero .value {
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+  .profit-hero .value.positive { color: var(--accent); }
+  .profit-hero .value.negative { color: var(--red); }
+  .profit-breakdown {
+    padding: 12px 20px 16px;
+  }
+  .profit-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    font-size: 12px;
+  }
+  .profit-row .label { color: var(--text-dim); }
+  .profit-row .value { font-weight: 700; }
+  .profit-row .value.income { color: var(--accent); }
+  .profit-row .value.expense { color: var(--red); }
+  .profit-margin {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .profit-margin .label { color: var(--text-dim); }
+  .profit-margin .value { font-weight: 800; font-size: 14px; }
+
+  /* Reset */
+  .btn-reset {
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: border-color 0.2s;
+  }
+  .btn-reset:hover { border-color: var(--accent); color: var(--text-dim); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--card);
+    border: 1px solid rgba(46,204,113,0.3);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 420px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(46,204,113,0.1);
+  }
+  .modal h2 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .modal .desc { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+  .modal .field-row {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .modal .field-row label { font-size: 13px; color: var(--text-dim); }
+  .modal .field-row input {
+    width: 96px;
+    background: var(--card-inner);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: right;
+    outline: none;
+  }
+  .modal .field-row input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+  .modal-actions button {
+    padding: 8px 20px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none;
+  }
+  .btn-cancel { background: var(--card-inner); color: var(--text-dim); border: 1px solid var(--border) !important; }
+  .btn-save { background: var(--primary); color: #fff; }
+  .btn-save:hover { background: var(--primary-bright); }
+
+  @media (max-width: 600px) {
+    .btn-settings { right: 12px; padding: 8px 10px; }
+    .btn-settings span { display: none; }
+    .layout { padding: 16px; }
+    .facturacion-hero .value { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP NAV BAR -->
+<div class="top-bar">
+  <div style="text-align:center">
+    <div class="brand">ScaleCom</div>
+    <div class="subtitle">Sales ROI Calculator</div>
+  </div>
+  <button class="btn-settings" onclick="openBaseModal()" title="Valores Base">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    <span>Metricas Base</span>
+  </button>
+</div>
+
+<div class="layout">
+  <!-- LEFT: Controls -->
+  <div class="main-col">
+
+    <div class="section-label">INVERSION EN ADS</div>
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">Inversion Mensual en Ads</span>
+        <span class="val" id="inversionDisplay">$3,000</span>
+      </div>
+      <input type="range" id="inversionAds" min="0" max="50000" step="100" value="3000" oninput="calc()">
+    </div>
+
+    <div class="roas-row">
+      <div class="roas-card">
+        <div class="label">ROAS Upfront</div>
+        <div class="value" id="roasUpfront">2.7x</div>
+      </div>
+      <div class="roas-card">
+        <div class="label">ROAS Cash Total</div>
+        <div class="value" id="roasTotal">4.8x</div>
+      </div>
+    </div>
+
+    <div class="section-label">PROSPECCION</div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">Llamadas Mensuales</span>
+        <div class="right-info">
+          <span class="val" id="llamadasDisplay">53</span>
+          <span class="suffix" id="llamadasDiarias">(2/dia)</span>
+        </div>
+      </div>
+      <input type="range" id="llamadasMensuales" min="1" max="300" step="1" value="53" oninput="calc()">
+      <div class="slider-bottom"><span id="costPerCall">$57 / llamada</span></div>
+    </div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">% Calificacion</span>
+        <div class="right-info">
+          <span class="result" id="calificadosResult">&rarr; 40 calificados</span>
+          <span class="val" id="pctCalifDisplay">75%</span>
+        </div>
+      </div>
+      <input type="range" id="pctCalificacion" min="0" max="100" step="1" value="75" oninput="calc()">
+      <div class="slider-bottom"><span id="costPerCalif">$75 / calificado</span></div>
+    </div>
+
+    <div class="section-label">ASISTENCIA & CIERRE</div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">% Asistencia</span>
+        <div class="right-info">
+          <span class="result" id="asistenciasResult">&rarr; 30 asistencias</span>
+          <span class="val" id="pctAsistDisplay">75%</span>
+        </div>
+      </div>
+      <input type="range" id="pctAsistencia" min="0" max="100" step="1" value="75" oninput="calc()">
+      <div class="slider-bottom"><span id="costPerAsist">$100 / asistencia</span></div>
+    </div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">% Cierre</span>
+        <div class="right-info">
+          <span class="result" id="ventasResult">&rarr; 8 ventas</span>
+          <span class="val" id="pctCierreDisplay">25%</span>
+        </div>
+      </div>
+      <input type="range" id="pctCierre" min="0" max="100" step="1" value="25" oninput="calc()">
+      <div class="slider-bottom"><span id="costPerVenta">$375 / cliente</span></div>
+    </div>
+
+    <div class="section-label">PRECIO & COBRO</div>
+
+    <div class="mix-card">
+      <div class="mix-header">
+        <h3>MIX DE PROGRAMAS</h3>
+        <button class="btn-add-program" onclick="addProgram()">+ Anadir programa</button>
+      </div>
+      <div class="units-check" id="unitsCheck"></div>
+      <div id="programList"></div>
+      <div class="aov-row">
+        <span class="label">AOV calculado</span>
+        <span class="value" id="aovDisplay">$2,000</span>
+      </div>
+    </div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">% Cash Upfront</span>
+        <div class="right-info">
+          <span class="result" id="cashUpfrontResult">&rarr; $8,000 al cerrar</span>
+          <span class="val" id="pctCashDisplay">50%</span>
+        </div>
+      </div>
+      <input type="range" id="pctCashUpfront" min="0" max="100" step="1" value="50" oninput="calc()">
+    </div>
+
+    <div class="slider-card">
+      <div class="slider-top">
+        <span class="label">% Cuotas Cobradas</span>
+        <div class="right-info">
+          <span class="result" id="cuotasResult">&rarr; $6,400 cobrado de $8,000</span>
+          <span class="val" id="pctCuotasDisplay">80%</span>
+        </div>
+      </div>
+      <input type="range" id="pctCuotasCobradas" min="0" max="100" step="1" value="80" oninput="calc()">
+    </div>
+
+    <div class="section-label">GASTOS OPERATIVOS</div>
+
+    <div class="mix-card">
+      <div class="mix-header">
+        <h3>COSTOS MENSUALES</h3>
+        <button class="btn-add-program" onclick="addExpense()">+ Anadir gasto</button>
+      </div>
+      <div id="expenseList"></div>
+      <div class="expense-total-row">
+        <span class="label">Total gastos operativos</span>
+        <span class="value" id="totalExpenses">$2,000</span>
+      </div>
+    </div>
+
+    <button class="btn-reset" onclick="resetToBase()">Restablecer a valores base</button>
+  </div>
+
+  <!-- RIGHT: Sidebar -->
+  <div class="sidebar">
+
+    <!-- Main Sidebar Card: Facturacion + Cash -->
+    <div class="sidebar-card">
+      <div class="facturacion-hero">
+        <div class="label">FACTURACION MENSUAL</div>
+        <div class="value" id="heroFacturacion">$16,000</div>
+      </div>
+      <div class="sidebar-card-body">
+        <div class="cash-section-label">CASH COLLECTED UPFRONT</div>
+        <div class="cash-section-value" id="cashUpfrontVal">$8,000</div>
+
+        <div class="cash-section-label" id="cuotasLabel">CASH DE CUOTAS (50% RESTANTE)</div>
+        <div class="cash-section-value" id="cashCuotasVal">$6,400</div>
+
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-row" style="padding-top:10px">
+          <span class="label">&#128722; Ventas cerradas</span>
+          <span class="value" style="font-weight:800" id="heroVentas">8</span>
+        </div>
+        <div class="sidebar-row">
+          <span class="label">AOV (precio promedio)</span>
+          <span class="value" style="font-weight:800" id="heroAov">$2,000</span>
+        </div>
+        <div class="sidebar-row">
+          <span class="label">Proyeccion Anual</span>
+          <span class="value" style="font-weight:800;font-size:16px" id="heroAnual">$192,000</span>
+        </div>
+        <div class="sidebar-row">
+          <span class="label">Profit Anual</span>
+          <span class="value" style="font-weight:800;font-size:16px" id="profitAnual">$112,800</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profit -->
+    <div class="profit-card">
+      <div class="profit-hero">
+        <div class="label">PROFIT MENSUAL</div>
+        <div class="value positive" id="profitValue">$5,400</div>
+      </div>
+      <div class="profit-breakdown">
+        <div class="profit-row">
+          <span class="label">Cash collected</span>
+          <span class="value income" id="profitIncome">+$14,400</span>
+        </div>
+        <div class="profit-row">
+          <span class="label">Inversion ads</span>
+          <span class="value expense" id="profitAds">-$3,000</span>
+        </div>
+        <div class="profit-row">
+          <span class="label">Gastos operativos</span>
+          <span class="value expense" id="profitExpenses">-$2,000</span>
+        </div>
+        <div class="profit-margin">
+          <span class="label">Margen de profit</span>
+          <span class="value" id="profitMargin">37.5%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Embudo -->
+    <div class="sidebar-card sidebar-card--plain">
+      <h3>EMBUDO DE VENTAS</h3>
+      <div id="embudoRows"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Base Modal -->
+<div class="modal-overlay" id="baseModal">
+  <div class="modal">
+    <h2>Valores Base</h2>
+    <p class="desc">Los sliders se comparan contra estos valores. Al restablecer, los controles vuelven a estos numeros.</p>
+    <div class="field-row"><label>Llamadas Mensuales</label><input type="number" id="modalBaseLlamadas" value="53"></div>
+    <div class="field-row"><label>% Calificacion</label><input type="number" id="modalBasePctCalif" value="75" min="0" max="100"></div>
+    <div class="field-row"><label>% Asistencia</label><input type="number" id="modalBasePctAsist" value="75" min="0" max="100"></div>
+    <div class="field-row"><label>% Cierre</label><input type="number" id="modalBasePctCierre" value="25" min="0" max="100"></div>
+    <div class="field-row"><label>Precio / AOV</label><input type="number" id="modalBasePrecio" value="2000"></div>
+    <div class="field-row"><label>% Cash Upfront</label><input type="number" id="modalBasePctCash" value="50" min="0" max="100"></div>
+    <div class="field-row"><label>% Cuotas Cobradas</label><input type="number" id="modalBasePctCuotas" value="80" min="0" max="100"></div>
+    <div class="field-row"><label>Inversion en Ads</label><input type="number" id="modalBaseInversion" value="3000"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeBaseModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveBase()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let programs = [{ name: 'Programa 1', price: 2000, units: 8 }];
+let expenses = [
+  { name: 'Software (CRM, herramientas)', amount: 500 },
+  { name: 'Edicion de contenido', amount: 300 },
+  { name: 'IA / Claude / ChatGPT', amount: 200 },
+  { name: 'Equipo / Freelancers', amount: 500 },
+  { name: 'Otros (oficina, telefono, etc)', amount: 500 }
+];
+let baseValues = {
+  llamadasMensuales: 53, pctCalificacion: 75, pctAsistencia: 75,
+  pctCierre: 25, precio: 2000, pctCashUpfront: 50, pctCuotasCobradas: 80, inversionAds: 3000
+};
+let lastVentas = 0;
+
+function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
+function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+function gv(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+function updateSlider(id) {
+  const el = document.getElementById(id);
+  const pct = ((el.value - el.min) / (el.max - el.min)) * 100;
+  el.style.background = `linear-gradient(to right, var(--slider-fill) 0%, var(--slider-fill) ${pct}%, var(--slider-track) ${pct}%, var(--slider-track) 100%)`;
+}
+
+function computeAOV() {
+  const tot = programs.reduce((s, p) => s + (p.units || 0), 0);
+  if (tot === 0) return 2000;
+  return Math.round(programs.reduce((s, p) => s + (p.price || 0) * (p.units || 0), 0) / tot);
+}
+
+function calc() {
+  const inv = gv('inversionAds');
+  const llamadas = clamp(gv('llamadasMensuales'), 1, 300);
+  const pCalif = clamp(gv('pctCalificacion'), 0, 100);
+  const pAsist = clamp(gv('pctAsistencia'), 0, 100);
+  const pCierre = clamp(gv('pctCierre'), 0, 100);
+  const pCash = clamp(gv('pctCashUpfront'), 0, 100);
+  const pCuotas = clamp(gv('pctCuotasCobradas'), 0, 100);
+  const aov = computeAOV();
+
+  const calificados = Math.round(llamadas * pCalif / 100);
+  const asistencias = Math.round(calificados * pAsist / 100);
+  const ventas = Math.round(asistencias * pCierre / 100);
+  const facturacion = ventas * aov;
+  const cashUp = facturacion * pCash / 100;
+  const restante = 100 - pCash;
+  const montoCuotas = facturacion * restante / 100;
+  const cashCuotas = montoCuotas * pCuotas / 100;
+  const totalCash = cashUp + cashCuotas;
+  const llamadasDia = Math.round(llamadas / 22);
+
+  if (ventas !== lastVentas) { lastVentas = ventas; distributeUnits(ventas); }
+
+  // Sliders
+  document.getElementById('inversionDisplay').textContent = fmt(inv);
+  document.getElementById('llamadasDisplay').textContent = llamadas;
+  document.getElementById('llamadasDiarias').textContent = `(${llamadasDia}/dia)`;
+  document.getElementById('pctCalifDisplay').textContent = pCalif + '%';
+  document.getElementById('pctAsistDisplay').textContent = pAsist + '%';
+  document.getElementById('pctCierreDisplay').textContent = pCierre + '%';
+  document.getElementById('pctCashDisplay').textContent = pCash + '%';
+  document.getElementById('pctCuotasDisplay').textContent = pCuotas + '%';
+
+  ['inversionAds','llamadasMensuales','pctCalificacion','pctAsistencia','pctCierre','pctCashUpfront','pctCuotasCobradas'].forEach(updateSlider);
+
+  // Results
+  document.getElementById('calificadosResult').innerHTML = `&rarr; ${calificados} calificados`;
+  document.getElementById('asistenciasResult').innerHTML = `&rarr; ${asistencias} asistencias`;
+  document.getElementById('ventasResult').innerHTML = `&rarr; ${ventas} ventas`;
+  document.getElementById('cashUpfrontResult').innerHTML = `&rarr; ${fmt(Math.round(aov * pCash / 100))} al cerrar`;
+  const cuotaPerVenta = ventas > 0 ? Math.round(montoCuotas * pCuotas / 100 / ventas) : 0;
+  document.getElementById('cuotasResult').innerHTML = `&rarr; ${fmt(cuotaPerVenta)} cobrado de ${fmt(Math.round(aov * restante / 100))}`;
+
+  // Cost per
+  const setCost = (id, count, label) => {
+    const el = document.getElementById(id);
+    if (!inv || !count) { el.textContent = ''; return; }
+    el.textContent = fmt(Math.round(inv / count)) + ' / ' + label;
+  };
+  setCost('costPerCall', llamadas, 'llamada');
+  setCost('costPerCalif', calificados, 'calificado');
+  setCost('costPerAsist', asistencias, 'asistencia');
+  setCost('costPerVenta', ventas, 'cliente');
+
+  // ROAS
+  const roasUp = inv > 0 ? cashUp / inv : 0;
+  const roasTot = inv > 0 ? totalCash / inv : 0;
+  document.getElementById('roasUpfront').textContent = roasUp.toFixed(1) + 'x';
+  const roasTotalEl = document.getElementById('roasTotal');
+  roasTotalEl.textContent = roasTot.toFixed(1) + 'x';
+  roasTotalEl.style.color = roasTot >= 3 ? 'var(--accent)' : roasTot >= 1 ? '#8fa898' : 'var(--red)';
+
+  // Sidebar hero
+  document.getElementById('heroFacturacion').textContent = fmt(facturacion);
+  document.getElementById('cashUpfrontVal').textContent = fmt(cashUp);
+  document.getElementById('cuotasLabel').textContent = `CASH DE CUOTAS (${restante}% RESTANTE)`;
+  document.getElementById('cashCuotasVal').textContent = fmt(cashCuotas);
+  document.getElementById('heroVentas').textContent = ventas;
+  document.getElementById('heroAov').textContent = fmt(aov);
+  document.getElementById('heroAnual').textContent = fmt(totalCash * 12);
+
+  // Profit
+  const totalExp = computeTotalExpenses();
+  const profit = totalCash - inv - totalExp;
+  const profitEl = document.getElementById('profitValue');
+  profitEl.textContent = (profit >= 0 ? '' : '-') + fmt(Math.abs(profit));
+  profitEl.className = 'value ' + (profit >= 0 ? 'positive' : 'negative');
+  document.getElementById('profitIncome').textContent = '+' + fmt(totalCash);
+  document.getElementById('profitAds').textContent = '-' + fmt(inv);
+  document.getElementById('profitExpenses').textContent = '-' + fmt(totalExp);
+  const margin = totalCash > 0 ? (profit / totalCash * 100) : 0;
+  const marginEl = document.getElementById('profitMargin');
+  marginEl.textContent = margin.toFixed(1) + '%';
+  marginEl.style.color = margin >= 30 ? 'var(--accent)' : margin >= 10 ? 'var(--orange)' : 'var(--red)';
+
+  // Profit anual
+  const profitAnual = profit * 12;
+  const profitAnualEl = document.getElementById('profitAnual');
+  profitAnualEl.textContent = (profitAnual >= 0 ? '' : '-') + fmt(Math.abs(profitAnual));
+  profitAnualEl.style.color = profitAnual >= 0 ? 'var(--accent)' : 'var(--red)';
+
+  // Embudo
+  const steps = [
+    { label: 'Llamadas', value: llamadas, color: 'var(--primary)' },
+    { label: 'Calificados', value: calificados, color: 'var(--primary-bright)' },
+    { label: 'Asistencias', value: asistencias, color: 'var(--accent-dim)' },
+    { label: 'Ventas', value: ventas, color: 'var(--accent)' }
+  ];
+  const maxV = Math.max(...steps.map(s => s.value), 1);
+  document.getElementById('embudoRows').innerHTML = steps.map(s => {
+    const w = Math.max(2, (s.value / maxV) * 100);
+    return `<div class="embudo-row">
+      <span class="label">${s.label}</span>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${w}%;background:${s.color}"></div></div>
+      <span class="count">${s.value}</span>
+    </div>`;
+  }).join('');
+
+  // Units check
+  const totalUnits = programs.reduce((s, p) => s + (p.units || 0), 0);
+  const checkEl = document.getElementById('unitsCheck');
+  if (totalUnits === ventas) {
+    checkEl.innerHTML = `&#9651; Unidades = ${ventas} ventas cerradas &#10003;`;
+    checkEl.style.cssText = 'border:1px solid rgba(46,204,113,0.3);background:rgba(46,204,113,0.08);color:var(--accent);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:6px;';
+  } else {
+    checkEl.innerHTML = `${totalUnits} / ${ventas} ventas &mdash; deben coincidir`;
+    checkEl.style.cssText = 'border:1px solid rgba(243,156,18,0.3);background:rgba(243,156,18,0.08);color:var(--orange);border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:6px;';
+  }
+}
+
+function distributeUnits(total) {
+  const curTotal = programs.reduce((s, p) => s + (p.units || 0), 0);
+  if (curTotal === 0 || total === 0) {
+    const each = Math.floor(total / programs.length);
+    const rem = total - each * programs.length;
+    programs.forEach((p, i) => { p.units = each + (i < rem ? 1 : 0); });
+  } else {
+    const ratios = programs.map(p => (p.units || 0) / curTotal);
+    let dist = ratios.map(r => Math.floor(r * total));
+    let left = total - dist.reduce((s, v) => s + v, 0);
+    const idx = ratios.map((r, i) => ({ r: r * total - dist[i], i })).sort((a, b) => b.r - a.r);
+    for (let k = 0; k < left; k++) dist[idx[k].i]++;
+    programs.forEach((p, i) => { p.units = dist[i]; });
+  }
+  renderPrograms();
+}
+
+function renderPrograms() {
+  const totU = programs.reduce((s, p) => s + (p.units || 0), 0);
+  document.getElementById('programList').innerHTML = programs.map((p, i) => {
+    const mix = totU > 0 ? Math.round((p.units / totU) * 100) : 0;
+    return `<div class="program-item">
+      <input type="text" class="program-name" value="${p.name}" onchange="updateProg(${i},'name',this.value)" placeholder="Nombre del programa">
+      <div class="program-fields">
+        <div class="program-field"><span class="lbl">Precio</span> <span class="prefix">$</span> <input type="number" min="0" step="100" value="${p.price}" onchange="updateProg(${i},'price',parseFloat(this.value)||0)"></div>
+        <div class="program-field"><span class="lbl">Unidades</span> <input type="number" min="0" step="1" value="${p.units}" onchange="updateProg(${i},'units',parseFloat(this.value)||0)"></div>
+        <span class="program-mix-pct">${mix}% del mix</span>
+        ${programs.length > 1 ? `<button class="btn-remove-program" onclick="removeProg(${i})">&#215;</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('aovDisplay').textContent = fmt(computeAOV());
+}
+
+function addProgram() { programs.push({ name: `Programa ${programs.length + 1}`, price: 2000, units: 1 }); renderPrograms(); calc(); }
+function removeProg(i) { programs.splice(i, 1); renderPrograms(); calc(); }
+function updateProg(i, f, v) { programs[i][f] = v; renderPrograms(); calc(); }
+
+function computeTotalExpenses() {
+  return expenses.reduce((s, e) => s + (e.amount || 0), 0);
+}
+
+function renderExpenses() {
+  document.getElementById('expenseList').innerHTML = expenses.map((e, i) => {
+    return `<div class="expense-item">
+      <input type="text" value="${e.name}" onchange="updateExpense(${i},'name',this.value)" placeholder="Nombre del gasto">
+      <span class="prefix">$</span>
+      <input type="number" min="0" step="50" value="${e.amount}" onchange="updateExpense(${i},'amount',parseFloat(this.value)||0)">
+      <button class="btn-remove-program" onclick="removeExpense(${i})" title="Eliminar">&#215;</button>
+    </div>`;
+  }).join('');
+  document.getElementById('totalExpenses').textContent = fmt(computeTotalExpenses());
+}
+
+function addExpense() { expenses.push({ name: 'Nuevo gasto', amount: 0 }); renderExpenses(); calc(); }
+function removeExpense(i) { expenses.splice(i, 1); renderExpenses(); calc(); }
+function updateExpense(i, f, v) { expenses[i][f] = v; renderExpenses(); calc(); }
+
+function resetToBase() {
+  document.getElementById('inversionAds').value = baseValues.inversionAds;
+  document.getElementById('llamadasMensuales').value = baseValues.llamadasMensuales;
+  document.getElementById('pctCalificacion').value = baseValues.pctCalificacion;
+  document.getElementById('pctAsistencia').value = baseValues.pctAsistencia;
+  document.getElementById('pctCierre').value = baseValues.pctCierre;
+  document.getElementById('pctCashUpfront').value = baseValues.pctCashUpfront;
+  document.getElementById('pctCuotasCobradas').value = baseValues.pctCuotasCobradas;
+  calc();
+}
+
+function openBaseModal() {
+  document.getElementById('modalBaseLlamadas').value = baseValues.llamadasMensuales;
+  document.getElementById('modalBasePctCalif').value = baseValues.pctCalificacion;
+  document.getElementById('modalBasePctAsist').value = baseValues.pctAsistencia;
+  document.getElementById('modalBasePctCierre').value = baseValues.pctCierre;
+  document.getElementById('modalBasePrecio').value = baseValues.precio;
+  document.getElementById('modalBasePctCash').value = baseValues.pctCashUpfront;
+  document.getElementById('modalBasePctCuotas').value = baseValues.pctCuotasCobradas;
+  document.getElementById('modalBaseInversion').value = baseValues.inversionAds;
+  document.getElementById('baseModal').classList.add('active');
+}
+function closeBaseModal() { document.getElementById('baseModal').classList.remove('active'); }
+function saveBase() {
+  baseValues = {
+    llamadasMensuales: parseFloat(document.getElementById('modalBaseLlamadas').value) || 53,
+    pctCalificacion: clamp(parseFloat(document.getElementById('modalBasePctCalif').value) || 75, 0, 100),
+    pctAsistencia: clamp(parseFloat(document.getElementById('modalBasePctAsist').value) || 75, 0, 100),
+    pctCierre: clamp(parseFloat(document.getElementById('modalBasePctCierre').value) || 25, 0, 100),
+    precio: parseFloat(document.getElementById('modalBasePrecio').value) || 2000,
+    pctCashUpfront: clamp(parseFloat(document.getElementById('modalBasePctCash').value) || 50, 0, 100),
+    pctCuotasCobradas: clamp(parseFloat(document.getElementById('modalBasePctCuotas').value) || 80, 0, 100),
+    inversionAds: parseFloat(document.getElementById('modalBaseInversion').value) || 3000
+  };
+  closeBaseModal(); calc();
+}
+
+renderPrograms();
+renderExpenses();
+calc();
+</script>
+</body>
+</html>
